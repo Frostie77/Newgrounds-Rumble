@@ -75,7 +75,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           from zipfile import ZipFile
-          import os, re, subprocess
+          import hashlib, os, re, subprocess
           aapt = Path(os.environ['ANDROID_HOME']) / 'build-tools/35.0.0/aapt'
           package = 'io.github.frostie77.newgroundsrumble'
           for variant, filename in (("debug", "app-debug.apk"), ("release", "app-release-unsigned.apk")):
@@ -86,6 +86,10 @@ jobs:
                   assert not any(p.lower().endswith('.swf') for p in names), 'Game SWF bundled'
                   assert 'assets/www/ruffle/ruffle.js' in names, 'Ruffle missing'
                   assert 'assets/www/index.html' in names, 'Game wrapper missing'
+                  artwork_hash = hashlib.sha256(Path('app/src/main/res/drawable-nodpi/ic_launcher_artwork.webp').read_bytes()).hexdigest()
+                  artwork = [p for p in names if p.startswith('res/') and p.endswith('.webp') and hashlib.sha256(z.read(p)).hexdigest() == artwork_hash]
+                  assert len(artwork) == 1, 'Approved Pico/Hank artwork missing or different'
+                  print(f'PASS: {variant} APK includes the approved artwork at {artwork[0]}')
               resources = subprocess.check_output([str(aapt), 'dump', 'resources', str(apk)], text=True)
               assert package + ':mipmap/ic_launcher' in resources, 'Launcher resource missing'
               badging = subprocess.check_output([str(aapt), 'dump', 'badging', str(apk)], text=True)

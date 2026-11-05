@@ -86,9 +86,12 @@ function Confirm-Payload($apk) {
             $packed = $archive.GetEntry('assets/www/ruffle/' + $entry.Name)
             if (-not $packed -or (Get-EntryHash $packed) -ne $entry.Value) { throw "Packaged Ruffle mismatch: $($entry.Name)" }
         }
-        $art = @($archive.Entries | Where-Object { $_.FullName -match '^res/.*/ic_launcher_artwork\.webp$' })
-        if ($art.Count -ne 1 -or (Get-EntryHash $art[0]) -ne
-            (Get-FileHash -LiteralPath 'app\src\main\res\drawable-nodpi\ic_launcher_artwork.webp' -Algorithm SHA256).Hash.ToLowerInvariant()) {
+        # Find the exact artwork bytes; compiled resource paths are compiler-controlled.
+        $artHash = (Get-FileHash -LiteralPath 'app\src\main\res\drawable-nodpi\ic_launcher_artwork.webp' -Algorithm SHA256).Hash.ToLowerInvariant()
+        $art = @($archive.Entries | Where-Object {
+            $_.FullName -match '^res/.*\.webp$' -and (Get-EntryHash $_) -eq $artHash
+        })
+        if ($art.Count -ne 1) {
             throw 'Approved Pico/Hank launcher artwork missing or different.'
         }
         $badging = @(& $aapt dump badging $apk)
