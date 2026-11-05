@@ -17,10 +17,10 @@ public final class NewgroundsRumbleTouchControls extends View {
 
     private final Input input;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final boolean[] pressed = new boolean[10]; // movement, light, heavy, jump, block, pause, confirm
-    private static final String[] KEYS = {"left", "right", "up", "down", "light", "heavy", "jump", "block", "pause", "confirm"};
-    private int movePointer = -1, lightPointer = -1, heavyPointer = -1, jumpPointer = -1, blockPointer = -1, pausePointer = -1, confirmPointer = -1;
-    private float movementX, movementY, lightX, lightY, heavyX, heavyY, jumpX, jumpY, blockX, blockY, pauseX, pauseY, confirmX, radius;
+    private static final String[] KEYS = {"left", "right", "up", "down", "light", "heavy", "block", "pause", "confirm"};
+    private final boolean[] pressed = new boolean[KEYS.length];
+    private int movePointer = -1, lightPointer = -1, heavyPointer = -1, blockPointer = -1, pausePointer = -1, confirmPointer = -1;
+    private float movementX, movementY, lightX, lightY, heavyX, heavyY, blockX, blockY, pauseX, pauseY, confirmX, radius;
     private float thumbX, thumbY; // normalized joystick direction
     private int sizeIndex = 1, opacityIndex = 1, padMode, positionIndex = 1;
     private boolean swapped;
@@ -48,17 +48,14 @@ public final class NewgroundsRumbleTouchControls extends View {
         radius = dp(59) * scale;
         movementX = swapped ? getWidth() - inset - radius : inset + radius;
         movementY = getHeight() - inset - radius;
-        lightX = swapped ? inset + radius : getWidth() - inset - radius;
-        lightY = getHeight() - inset - radius;
+        heavyX = swapped ? inset + radius : getWidth() - inset - radius;
+        heavyY = getHeight() - inset - radius;
         float direction = swapped ? 1 : -1;
-        jumpX = lightX;
-        jumpY = lightY;
-        lightX = jumpX + direction * radius * 1.30f;
-        lightY = jumpY - radius * 0.28f;
-        heavyX = jumpX + direction * radius * 0.28f;
-        heavyY = jumpY - radius * 1.32f;
-        blockX = jumpX + direction * radius * 1.65f;
-        blockY = jumpY - radius * 1.66f;
+        // Compact three-button triangle; Up on either movement pad is jump.
+        lightX = heavyX + direction * radius * 1.40f;
+        lightY = heavyY;
+        blockX = heavyX + direction * radius * 0.70f;
+        blockY = heavyY - radius * 1.25f;
         pauseX = dp(40);
         pauseY = dp(33);
         confirmX = dp(96);
@@ -93,7 +90,7 @@ public final class NewgroundsRumbleTouchControls extends View {
     }
 
     public void releaseAll() {
-        movePointer = lightPointer = heavyPointer = jumpPointer = blockPointer = pausePointer = confirmPointer = -1;
+        movePointer = lightPointer = heavyPointer = blockPointer = pausePointer = confirmPointer = -1;
         thumbX = thumbY = 0f;
         for (int k = 0; k < pressed.length; k++) set(k, false);
         invalidate();
@@ -115,10 +112,9 @@ public final class NewgroundsRumbleTouchControls extends View {
         else drawJoystick(canvas, alpha);
         drawAction(canvas, lightX, lightY, radius * 0.56f, "Light", pressed[4], alpha);
         drawAction(canvas, heavyX, heavyY, radius * 0.56f, "Heavy", pressed[5], alpha);
-        drawAction(canvas, jumpX, jumpY, radius * 0.56f, "Jump", pressed[6], alpha);
-        drawAction(canvas, blockX, blockY, radius * 0.56f, "Block", pressed[7], alpha);
-        drawAction(canvas, pauseX, pauseY, dp(22), "Pause", pressed[8], alpha);
-        drawAction(canvas, confirmX, pauseY, dp(22), "Next", pressed[9], alpha);
+        drawAction(canvas, blockX, blockY, radius * 0.56f, "Block", pressed[6], alpha);
+        drawAction(canvas, pauseX, pauseY, dp(22), "Pause", pressed[7], alpha);
+        drawAction(canvas, confirmX, pauseY, dp(22), "Next", pressed[8], alpha);
     }
 
     /** Outer fixed ring and a moving thumbstick, rather than a MOVE text disc. */
@@ -267,17 +263,14 @@ public final class NewgroundsRumbleTouchControls extends View {
                 set(5, true);
                 return true;
             }
-            if (jumpPointer == -1 && near(x, y, jumpX, jumpY, radius * 0.62f)) {
-                jumpPointer = pointer; set(6, true); return true;
-            }
             if (blockPointer == -1 && near(x, y, blockX, blockY, radius * 0.62f)) {
-                blockPointer = pointer; set(7, true); return true;
+                blockPointer = pointer; set(6, true); return true;
             }
             if (pausePointer == -1 && near(x, y, pauseX, pauseY, dp(26))) {
-                pausePointer = pointer; set(8, true); return true;
+                pausePointer = pointer; set(7, true); return true;
             }
             if (confirmPointer == -1 && near(x, y, confirmX, pauseY, dp(26))) {
-                confirmPointer = pointer; set(9, true); return true;
+                confirmPointer = pointer; set(8, true); return true;
             }
             // Unclaimed first touches pass through to the Flash menus.
             return action != MotionEvent.ACTION_DOWN;
@@ -299,10 +292,9 @@ public final class NewgroundsRumbleTouchControls extends View {
             }
             if (pointer == lightPointer) { lightPointer = -1; set(4, false); }
             if (pointer == heavyPointer) { heavyPointer = -1; set(5, false); }
-            if (pointer == jumpPointer) { jumpPointer = -1; set(6, false); }
-            if (pointer == blockPointer) { blockPointer = -1; set(7, false); }
-            if (pointer == pausePointer) { pausePointer = -1; set(8, false); }
-            if (pointer == confirmPointer) { confirmPointer = -1; set(9, false); }
+            if (pointer == blockPointer) { blockPointer = -1; set(6, false); }
+            if (pointer == pausePointer) { pausePointer = -1; set(7, false); }
+            if (pointer == confirmPointer) { confirmPointer = -1; set(8, false); }
             return true;
         }
         return true;

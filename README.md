@@ -21,7 +21,7 @@ Build and install with `build-test.ps1`, open the app, and select your SWF. Menu
 | L1 | Game pause (P) |
 | Start / menu icon | FrostFrontend |
 
-Remap actions in FrostFrontend. Keep the game's keyboard bindings at their defaults. Touch controls include a joystick or D-pad, Jump, Light, Heavy, Block, Pause and Next, with size, opacity and position settings. Original 650×450 proportions and stretch display modes are available. Speaker Test is under Sound.
+Remap actions in FrostFrontend. Keep the game's keyboard bindings at their defaults. Touch controls include a joystick or D-pad (Up to jump), Light, Heavy, Block, Pause and Next, with size, opacity and position settings. Light and Heavy sit along the bottom with Block above them. Original 650×450 proportions and stretch display modes are available. Speaker Test is under Sound.
 
 ## Updates
 
