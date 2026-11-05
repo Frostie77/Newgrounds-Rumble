@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Newgrounds Rumble</title>
+<style>
+html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; color:#fff; font-family:sans-serif; }
+#stage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+#game { width:min(100vw, calc(100vh * 13 / 9)); height:min(100vh, calc(100vw * 9 / 13)); transform-origin:center center; }
+ruffle-player { width:100%; height:100%; }
+#status { position:absolute; left:20px; bottom:20px; color:#ddd; font-size:14px; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="game"></div></div>
+<div id="status">Starting Newgrounds Rumble…</div>
+<script>
+window.RufflePlayer = window.RufflePlayer || {};
+window.RufflePlayer.config = {
+  autoplay: 'on', unmuteOverlay: 'visible', letterbox: 'on', contextMenu: 'off',
+  allowScriptAccess: true, allowNetworking: 'all', publicPath: 'ruffle/',
+  quality: 'high'
+};
+let player;
+let rumbleReady = false;
+let rumbleMenuPaused = false, rumbleBackgroundPaused = false, rumbleRufflePaused = false;
+let rumbleDisplayMode = 'original';
+function syncRufflePause() {
+  const paused = rumbleMenuPaused || rumbleBackgroundPaused;
+  if (!rumbleReady || !player || rumbleRufflePaused === paused) return;
+  try {
+    if (paused) player.ruffle().suspend();
+    else player.ruffle().resume();
+  } catch (error) {
+    try {
+      if (paused && typeof player.pause === 'function') player.pause();
+      else if (!paused && typeof player.play === 'function') player.play();
+    } catch (fallbackError) {
+      console.warn('NewgroundsRumble pause failed', fallbackError);
+      return;
+    }
+  }
+  rumbleRufflePaused = paused;
+  if (!paused && player) player.focus();
+}
+window.rumbleSetMenuPaused = value => {
+  rumbleMenuPaused = !!value;
+  if (rumbleMenuPaused) window.rumbleClearKeys();
+  syncRufflePause();
+};
+window.rumbleSetBackgroundPaused = value => {
+  rumbleBackgroundPaused = !!value;
+  if (rumbleBackgroundPaused) window.rumbleClearKeys();
+  syncRufflePause();
+};
+window.rumbleSetDisplayMode = mode => {
+  rumbleDisplayMode = mode === 'stretch' ? 'stretch' : 'original';
+  const game = document.getElementById('game');
+  if (!game) return;
+  game.style.transform = '';
+  if (rumbleDisplayMode === 'stretch') {
+    const box = game.getBoundingClientRect();
+    if (box.width && box.height) {
+      game.style.transform = 'scale(' + (innerWidth / box.width) + ',' + (innerHeight / box.height) + ')';
+    }
+  }
+};
+window.addEventListener('resize', () => window.rumbleSetDisplayMode(rumbleDisplayMode));
+document.addEventListener('visibilitychange', () => window.rumbleSetBackgroundPaused(document.hidden));
+const keys = {
+  up:{key:'ArrowUp',code:'ArrowUp',keyCode:38},
+  down:{key:'ArrowDown',code:'ArrowDown',keyCode:40},
+  left:{key:'ArrowLeft',code:'ArrowLeft',keyCode:37},
+  right:{key:'ArrowRight',code:'ArrowRight',keyCode:39},
+  light:{key:'s',code:'KeyS',keyCode:83},
+  heavy:{key:'d',code:'KeyD',keyCode:68},
+  block:{key:'a',code:'KeyA',keyCode:65},
+  pause:{key:'p',code:'KeyP',keyCode:80},
+  confirm:{key:' ',code:'Space',keyCode:32}
+};
+const sources = Object.create(null);
+function sendRumbleKey(id, pressed) {
+  const spec = keys[id];
+  player.dispatchEvent(new KeyboardEvent(pressed ? 'keydown' : 'keyup', {
+    key:spec.key, code:spec.code, keyCode:spec.keyCode, which:spec.keyCode,
+    bubbles:true, composed:true, cancelable:true
+  }));
+}
+window.rumbleKey = (id, pressed, source) => {
+  // Jump and upward movement share one key, including overlapping sources.
+  if (id === 'jump') id = 'up';
+  if (pressed && (rumbleMenuPaused || rumbleBackgroundPaused)) return;
+  if (!keys[id] || !player || !rumbleReady) return;
+  if (!sources[id]) sources[id] = new Set();
+  const wasDown = sources[id].size > 0;
+  if (pressed) sources[id].add(source); else sources[id].delete(source);
+  const nowDown = sources[id].size > 0;
+  if (wasDown === nowDown) return;
+  player.focus();
+  sendRumbleKey(id, nowDown);
+};
+window.rumbleClearKeys = () => {
+  for (const [id, holders] of Object.entries(sources)) {
+    if (!holders.size) continue;
+    holders.clear();
+    if (player) sendRumbleKey(id, false);
+  }
+};
+window.addEventListener('load', async () => {
+  const status = document.getElementById('status');
+  try {
+    const ruffle = window.RufflePlayer.newest();
+    if (!ruffle) throw new Error('Ruffle runtime missing');
+    player = ruffle.createPlayer();
+    document.getElementById('game').appendChild(player);
+    await player.ruffle().load({
+      url:'/game/newgrounds-rumble.swf', allowNetworking:'all',
+      allowScriptAccess:true, quality:'high'
+    });
+    // Ruffle 0.7.1 creates its runtime during load(); earlier observer assignments
+    // are discarded. Attach here before Flash starts executing its first frame.
+    player.ruffle().traceObserver = message => {
+      if (typeof message === 'string' && message.startsWith('RUMBLEDBG_'))
+        console.info(message);
+    };
+    rumbleReady = true;
+    status.remove();
+    window.rumbleSetDisplayMode(rumbleDisplayMode);
+    syncRufflePause();
+    player.focus();
+  } catch (e) {
+    status.textContent = 'Game load failed: ' + String(e);
+    console.error('NewgroundsRumble load failed', e);
+  }
+});
+</script>
+<script src="ruffle/ruffle.js"></script>
+</body>
+</html>
