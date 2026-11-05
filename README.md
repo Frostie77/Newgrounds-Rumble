@@ -34,6 +34,6 @@ The stable update checker is prepared for `Frostie77/Newgrounds-Rumble`. No publ
 - **Flash compatibility:** [Ruffle](https://ruffle.rs/), version 0.7.1.
 - **Settings interface:** [FrostFrontend](https://github.com/Frostie77/FrostFrontend), pinned at `2147f7ab4e183ea6b19b3d8bedf6bbe04b05c56c`.
 
-Original game artwork, audio, characters and other content belong to their respective owners. The initial test icon is temporary.
+Original game artwork, audio, characters and other content belong to their respective owners. The launcher uses the approved Pico and Hank artwork, with density-specific icons and an adaptive Android icon.
 
 [Build instructions](BUILDING.md)
