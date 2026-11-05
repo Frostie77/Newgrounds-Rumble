@@ -2,7 +2,7 @@
 
 The Odin 2 Portal tester confirmed gameplay, gamepad controls, graphics settings, sound settings/speaker test and persistence across restarts. The follow-up builds removed the redundant touch Jump button, arranged Light/Heavy/Block together and added the approved Pico/Hank icon. The tester accepted the final icon and touch layout.
 
-The source remains game-free. Release preparation uses the same tested app version and stages a separately signed public APK and matching update metadata on the owner's PC. The stable feed remains `latest: null` until the matching release is public. See `RELEASING.md` for preparation, verification and the Debug-to-public signing decision.
+The source remains game-free. The public v0.1.3 APK uses the same tested app version, signed with the permanent release key on the owner's PC. Its matching stable feed was activated after publication. See `RELEASING.md` for the published identity, verification and the Debug-to-public signing decision.
 
 # Startup fix — 0.1.1 (version code 2)
 
@@ -26,6 +26,6 @@ The compatibility file SHA-256 is `0767a6f336739da31a8bf3c6667424fe51c7f3ee190d1
 
 Ruffle logs a `castleFG` export warning during loading. The castle arena has not yet been checked; no asset or game-code patch has been added.
 
-## Still to test on the Odin
+## Further device coverage
 
-Gameplay across characters and arenas, combo timing, both speakers, frame rate, touchscreen multitouch, controller remapping, app background/resume and a real APK update preserving progress. Complete these before choosing release artwork, signing a public APK or publishing a stable feed. Desktop headless checks do not establish Odin performance.
+Gameplay across all characters and arenas, combo timing, long sessions and a future public APK update preserving progress remain further device coverage. The accepted device checks do not establish full-game compatibility or performance on other Android devices.

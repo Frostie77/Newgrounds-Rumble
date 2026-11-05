@@ -2,11 +2,11 @@
 
 An unofficial Android adaptation of Newgrounds Rumble, powered by Ruffle and FrostFrontend. Requires Android 8.0 or newer.
 
-Tested on the AYN Odin 2 Portal. The supplied `newgroundsrumble-hank.swf` is the compatibility test file; the original game is not included in the source or APK. The first public release is being prepared.
+Tested on the AYN Odin 2 Portal. The supplied `newgroundsrumble-hank.swf` is the compatibility test file; the original game is not included in the source or APK.
 
 ## Start playing
 
-Build and install with `build-test.ps1`, open the app, and select your SWF. Menus use the touchscreen. Your imported file, local game progress and settings stay in the app between launches and APK updates.
+Download the [v0.1.3 Android APK](https://github.com/Frostie77/Newgrounds-Rumble/releases/download/v0.1.3/Newgrounds-Rumble-v0.1.3-Android.apk) from the [public release](https://github.com/Frostie77/Newgrounds-Rumble/releases/tag/v0.1.3), install it, open the app and select your SWF. Menus use the touchscreen. Your imported file, local game progress and settings stay in the app between launches and public APK updates.
 
 ## Default controller controls
 
@@ -25,7 +25,9 @@ Remap actions in FrostFrontend. Keep the game's keyboard bindings at their defau
 
 ## Updates
 
-The stable update checker is prepared for `Frostie77/Newgrounds-Rumble`. No public release is published yet. Development APKs use your PC's Android debug key; stable updates will use the permanent release signing key.
+The signed public APK checks this repository's stable feed. Use **Updates → Check for Updates** in FrostFrontend, or enable automatic checks at startup. When an update is available, open its verified GitHub release page from Updates and install that APK over your existing public version to retain your progress and settings.
+
+Development APKs use the PC's Android Debug signing key and are excluded from stable updates. See the [build instructions](BUILDING.md) before switching between development and public builds.
 
 ## Credits
 
