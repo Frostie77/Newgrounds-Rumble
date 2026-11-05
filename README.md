@@ -18,7 +18,7 @@ Build and install with `build-test.ps1`, open the app, and select your SWF. Menu
 | Y | Heavy attack (D) |
 | B | Block / parry (A) |
 | R1 | Continue / next (Space) |
-| Select | Game pause (P) |
+| L1 | Game pause (P) |
 | Start / menu icon | FrostFrontend |
 
 Remap actions in FrostFrontend. Keep the game's keyboard bindings at their defaults. Touch controls include a joystick or D-pad, Jump, Light, Heavy, Block, Pause and Next, with size, opacity and position settings. Original 650×450 proportions and stretch display modes are available. Speaker Test is under Sound.

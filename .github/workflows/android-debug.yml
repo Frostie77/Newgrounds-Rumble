@@ -24,6 +24,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Verify Activity control profile initializes
+        run: python3 tests/test_control_profile.py
+
       - name: Test the production update verifier
         run: python3 tests/test_updates.py
 

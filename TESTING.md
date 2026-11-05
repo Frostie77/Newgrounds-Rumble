@@ -1,4 +1,12 @@
-# Initial build verification — 5 November 2026
+# Startup fix — 0.1.1 (version code 2)
+
+The Odin crash log identifies `ExceptionInInitializerError`, caused by `Unsupported default button: Game Pause`. The original default assigned Select, which the pinned FrostFrontend mapper does not allow. Pause now defaults to the supported L1 button. Start remains the FrostFrontend menu button.
+
+`python tests/test_control_profile.py` extracts the Activity's actual control-profile initializer and runs it with the pinned production mapper and profile classes. It reproduces the original failure and checks initialization plus preference loading with the corrected defaults, including rejection of a stale saved Select binding. CI runs this check before building the APKs.
+
+The package remains `io.github.frostie77.newgroundsrumble`; version code increases to 2 and version name to `0.1.1` (`0.1.1-dev` for Debug). The PC helper retains its existing debug signing identity and installs with `adb install -r`.
+
+# Initial 0.1.0 build verification — 5 November 2026
 
 - Both `:app:assembleDebug` and `:app:assembleRelease` pass with Gradle 8.11.1, JDK 17, Android platform 35 and build tools 35.0.0. Release output remains unsigned for later local release preparation.
 - APK inspection verifies package `io.github.frostie77.newgroundsrumble`, version code 1, versions `0.1.0-dev` / `0.1.0`, minimum API 26, target API 35, Newgrounds Rumble label, a packaged launcher resource, current HTML and Ruffle. Neither APK contains a SWF. Debug signature and 16 KB alignment checks pass.

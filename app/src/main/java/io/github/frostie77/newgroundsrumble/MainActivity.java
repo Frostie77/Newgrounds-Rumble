@@ -73,7 +73,7 @@ public final class MainActivity extends Activity {
         new FrostButtonMapper.Action("light", "Light Attack", KeyEvent.KEYCODE_BUTTON_X),
         new FrostButtonMapper.Action("heavy", "Heavy Attack", KeyEvent.KEYCODE_BUTTON_Y),
         new FrostButtonMapper.Action("block", "Block / Parry", KeyEvent.KEYCODE_BUTTON_B),
-        new FrostButtonMapper.Action("pause", "Game Pause", KeyEvent.KEYCODE_BUTTON_SELECT),
+        new FrostButtonMapper.Action("pause", "Game Pause", KeyEvent.KEYCODE_BUTTON_L1),
         new FrostButtonMapper.Action("confirm", "Continue / Next", KeyEvent.KEYCODE_BUTTON_R1)
     );
 
@@ -335,7 +335,7 @@ public final class MainActivity extends Activity {
                                     binding == FrostButtonMapper.UNMAPPED));
                             }
                             rows.add(item("map_reset", "Restore Default Controls", "",
-                                "Jump: A · Light: X · Heavy: Y · Block: B · Pause: Select · Continue: R1"));
+                                "Jump: A · Light: X · Heavy: Y · Block: B · Pause: L1 · Continue: R1"));
                             return rows;
                         }
                         if (showingMovementSettings) {
