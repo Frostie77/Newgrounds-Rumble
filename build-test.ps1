@@ -1,3 +1,4 @@
+param([switch]$PrepareOnly)
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 # Never package the user's game inside the source/debug APK.
@@ -11,13 +12,19 @@ if (-not (Test-Path $libGradle)) {
     & git submodule update --init --recursive
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $libGradle)) { throw 'FrostFrontend submodule missing.' }
 }
-$env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot'
-if (!(Test-Path (Join-Path $env:JAVA_HOME 'bin\java.exe'))) {
-    $env:JAVA_HOME = Join-Path $env:ProgramFiles 'Android\Android Studio\jbr'
-}
-if (!(Test-Path (Join-Path $env:JAVA_HOME 'bin\java.exe'))) { throw 'JDK 17 not found.' }
+$javaCandidates = @($env:JAVA_HOME,
+    'C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot',
+    (Join-Path $env:ProgramFiles 'Android\Android Studio\jbr'))
+$javaRoot = $javaCandidates | Where-Object {
+    $_ -and (Test-Path (Join-Path $_ 'bin\java.exe'))
+} | Select-Object -First 1
+if (-not $javaRoot) { throw 'JDK 17 not found.' }
+$env:JAVA_HOME = $javaRoot
 $env:PATH = (Join-Path $env:JAVA_HOME 'bin') + ';' + $env:PATH
-$sdk = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
+$sdk = $env:ANDROID_HOME
+if (-not $sdk -or -not (Test-Path $sdk)) {
+    $sdk = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
+}
 if (!(Test-Path $sdk)) { throw "Android SDK not found: $sdk" }
 $env:ANDROID_HOME = $sdk
 Set-Content -Path 'local.properties' -Value "sdk.dir=$($sdk.Replace('\','/'))"
@@ -61,6 +68,7 @@ if (!$gradle -or !(Test-Path $gradle)) {
     Expand-Archive $zip -DestinationPath $boot -Force
     $gradle = Join-Path $boot 'gradle-8.11.1\bin\gradle.bat'
 }
+if ($PrepareOnly) { return }
 & $gradle ':app:assembleDebug'
 if ($LASTEXITCODE -ne 0) { throw 'Gradle build failed.' }
 $apk = Join-Path $PSScriptRoot 'app\build\outputs\apk\debug\app-debug.apk'

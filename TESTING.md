@@ -1,3 +1,9 @@
+# Device acceptance — 0.1.3 (version code 4)
+
+The Odin 2 Portal tester confirmed gameplay, gamepad controls, graphics settings, sound settings/speaker test and persistence across restarts. The follow-up builds removed the redundant touch Jump button, arranged Light/Heavy/Block together and added the approved Pico/Hank icon. The tester accepted the final icon and touch layout.
+
+The source remains game-free. Release preparation uses the same tested app version and stages a separately signed public APK and matching update metadata on the owner's PC. The stable feed remains `latest: null` until the matching release is public. See `RELEASING.md` for preparation, verification and the Debug-to-public signing decision.
+
 # Startup fix — 0.1.1 (version code 2)
 
 The Odin crash log identifies `ExceptionInInitializerError`, caused by `Unsupported default button: Game Pause`. The original default assigned Select, which the pinned FrostFrontend mapper does not allow. Pause now defaults to the supported L1 button. Start remains the FrostFrontend menu button.

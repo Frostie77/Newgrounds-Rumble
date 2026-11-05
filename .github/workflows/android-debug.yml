@@ -109,16 +109,91 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
-      - name: Parse helper with Windows PowerShell 5.1
+      - name: Parse helpers with Windows PowerShell 5.1
         shell: powershell
         run: |
-          $parseErrors = $null
-          $tokens = $null
-          $file = Join-Path $env:GITHUB_WORKSPACE 'build-test.ps1'
-          [System.Management.Automation.Language.Parser]::ParseFile(
-            $file, [ref]$tokens, [ref]$parseErrors) | Out-Null
-          if ($parseErrors.Count -gt 0) {
-            $parseErrors | ForEach-Object { Write-Error $_ }
-            exit 1
+          foreach ($name in @('build-test.ps1', 'build-public-release.ps1')) {
+            $parseErrors = $null
+            $tokens = $null
+            $file = Join-Path $env:GITHUB_WORKSPACE $name
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $file, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              $parseErrors | ForEach-Object { Write-Error $_ }
+              exit 1
+            }
           }
-          Write-Host 'PASS: build helper parses in Windows PowerShell 5.1.'
+          Write-Host 'PASS: build helpers parse in Windows PowerShell 5.1.'
+
+      - name: Use JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.11.1
+
+      - name: Install Android 35 platform
+        shell: powershell
+        run: |
+          & "$env:ANDROID_HOME\cmdline-tools\latest\bin\sdkmanager.bat" 'platforms;android-35' 'build-tools;35.0.0'
+          if ($LASTEXITCODE -ne 0) { throw 'Android SDK setup failed.' }
+
+      - name: Exercise release signing and mismatched-key protection with a disposable key
+        shell: powershell
+        run: |
+          $productionFeed = Join-Path $env:GITHUB_WORKSPACE 'updates\android-stable.json'
+          $productionFeedHash = (Get-FileHash -Algorithm SHA256 $productionFeed).Hash
+          # A local fixture commit resets only the feed, allowing disposable-key
+          # tests to keep working after the real permanent signer is published.
+          $fixtureRepo = Join-Path $env:RUNNER_TEMP 'rumble-release-fixture'
+          & git clone --no-hardlinks $env:GITHUB_WORKSPACE $fixtureRepo
+          if ($LASTEXITCODE -ne 0) { throw 'Fixture checkout failed.' }
+          Set-Location $fixtureRepo
+          $emptyFeed = @{schema_version=1; channel='stable'; package='io.github.frostie77.newgroundsrumble'; latest=$null}
+          [System.IO.File]::WriteAllText((Join-Path $fixtureRepo 'updates\android-stable.json'), ($emptyFeed | ConvertTo-Json))
+          & git add updates/android-stable.json
+          & git -c user.name='Release Test' -c user.email='release-test@example.invalid' commit --allow-empty -m 'Set up isolated first-release fixture'
+          if ($LASTEXITCODE -ne 0) { throw 'Fixture commit failed.' }
+          $fixtureParent = (& git rev-parse HEAD^).Trim()
+          if ($fixtureParent -ne $env:GITHUB_SHA) { throw 'Fixture does not derive from the workflow source.' }
+          $env:RUMBLE_CI_SIGNING_PASSWORD = [Guid]::NewGuid().ToString('N')
+          $fixture = Join-Path $env:RUNNER_TEMP 'rumble-disposable-test.keystore'
+          & .\build-public-release.ps1 -KeystorePath $fixture -SigningPasswordEnvironment RUMBLE_CI_SIGNING_PASSWORD
+          $sha = (& git rev-parse HEAD).Trim()
+          $folder = Get-ChildItem '.\release' -Directory | Select-Object -First 1
+          $feed = Get-Content -Raw (Join-Path $folder.FullName 'android-stable.json') | ConvertFrom-Json
+          if ($feed.latest.source_commit -ne $sha) { throw 'Release source metadata mismatch.' }
+          $apk = Join-Path $folder.FullName $feed.latest.apk_asset
+          $beforeHash = (Get-FileHash -Algorithm SHA256 $apk).Hash.ToLowerInvariant()
+          if ($beforeHash -ne $feed.latest.apk_sha256 -or (Get-Item $apk).Length -ne $feed.latest.apk_size) {
+            throw 'Staged feed does not describe the actual signed APK.'
+          }
+          $pin = $fixture + '.certificate.sha256'
+          $originalPin = Get-Content -Raw $pin
+          $rejected = $false
+          try {
+            Set-Content -LiteralPath $pin -Value ('b' * 64)
+            try {
+              & .\build-public-release.ps1 -KeystorePath $fixture -SigningPasswordEnvironment RUMBLE_CI_SIGNING_PASSWORD
+            } catch {
+              if ($_.Exception.Message -notmatch 'established local release identity') { throw }
+              $rejected = $true
+            }
+          } finally {
+            Set-Content -LiteralPath $pin -Value $originalPin
+            Remove-Item Env:\RUMBLE_CI_SIGNING_PASSWORD
+          }
+          if (-not $rejected) { throw 'Mismatched release identity was accepted.' }
+          if ((Get-FileHash -Algorithm SHA256 $apk).Hash.ToLowerInvariant() -ne $beforeHash) {
+            throw 'Failed signing attempt changed the verified candidate.'
+          }
+          $live = Get-Content -Raw '.\updates\android-stable.json' | ConvertFrom-Json
+          if ($null -ne $live.latest) { throw 'Release preparation activated the live feed.' }
+          if ((Get-FileHash -Algorithm SHA256 $productionFeed).Hash -ne $productionFeedHash) {
+            throw 'Fixture changed the production feed.'
+          }
+          Write-Host 'PASS: real signed APK, matching feed, signature/identity checks and rejected mismatched key; live feed unchanged.'

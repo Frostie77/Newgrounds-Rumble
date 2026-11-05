@@ -2,7 +2,7 @@
 
 An unofficial Android adaptation of Newgrounds Rumble, powered by Ruffle and FrostFrontend. Requires Android 8.0 or newer.
 
-This is an initial development build. Odin gameplay, audio and performance still need device testing. The supplied `newgroundsrumble-hank.swf` is the compatibility test file; the original game is not included in the source or APK.
+Tested on the AYN Odin 2 Portal. The supplied `newgroundsrumble-hank.swf` is the compatibility test file; the original game is not included in the source or APK. The first public release is being prepared.
 
 ## Start playing
 
@@ -36,4 +36,4 @@ The stable update checker is prepared for `Frostie77/Newgrounds-Rumble`. No publ
 
 Original game artwork, audio, characters and other content belong to their respective owners. The launcher uses the approved Pico and Hank artwork, with density-specific icons and an adaptive Android icon.
 
-[Build instructions](BUILDING.md)
+[Build instructions](BUILDING.md) · [Release preparation](RELEASING.md)
